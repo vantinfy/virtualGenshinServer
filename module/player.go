@@ -23,6 +23,7 @@ type Player struct {
 	ModRelics     *ModRelics     // 圣遗物
 	ModCook       *ModCook       // 烹饪技能
 	ModHome       *ModHome       // 家园物品
+	ModPool       *ModPool       // 卡池
 }
 
 // --- 初始化相关 ---
@@ -59,6 +60,9 @@ func NewPlayer() *Player {
 	player.ModHome = new(ModHome)
 	player.ModHome.HomeItemInfo = make(map[int]*HomeItemInfo)
 
+	player.ModPool = new(ModPool)
+	player.ModPool.UpPoolInfo = &PoolInfo{}
+
 	// --- 数据初始化 ---
 	player.ModPlayer.Name = "旅行者"
 	player.ModPlayer.PlayerLevel = 1
@@ -68,60 +72,80 @@ func NewPlayer() *Player {
 	return player
 }
 
+// Wait 多个玩家协程的时候syncWait
 var Wait = sync.WaitGroup{}
 
 // Run 处理客户端请求
 func (p *Player) Run() {
 	//pwd:/main/bag/add tree:/
 	fmt.Println("====== 输入命令 ======")
+	cmd := ""
+	// 初次登录，选择角色
 	for {
-		outloop := true // 标记位
-		cmd := ""
-		for {
-			fmt.Println("选择初始角色 0:旅行者妹妹(荧) 1:旅行者哥哥(空) -1:退出")
-			_, _ = fmt.Scan(&cmd)
-			if cmd == "0" {
-				p.ModBag.AddItem(p, 2000001, 1)
-				break
-			}
-			if cmd == "1" {
-				p.ModBag.AddItem(p, 2000002, 1)
-				break
-			}
-			if cmd == "-1" {
-				Wait.Done()
-				return
-			}
+		fmt.Println("选择初始角色 0:旅行者妹妹(荧) 1:旅行者哥哥(空) -1:退出")
+		_, _ = fmt.Scan(&cmd)
+		if cmd == "0" {
+			p.ModBag.AddItem(p, 2000001, 1)
+			break
 		}
-
-		fmt.Println("///main/// -1:展示路径 0:退出 1:查看玩家信息 2:进入背包")
+		if cmd == "1" {
+			p.ModBag.AddItem(p, 2000002, 1)
+			break
+		}
+		if cmd == "-1" {
+			Wait.Done()
+			return
+		}
+	}
+	for {
+		fmt.Println("///main/// -1:展示路径 0:退出 1:查看玩家信息 2:进入背包 3:抽up池")
 		_, _ = fmt.Scan(&cmd)
 		if cmd == "-1" {
 			fmt.Println(`
 主界面(当前位置) ─┬─ 个人信息 #1
 				├─ 背包 #2
+				├─ 抽卡(up池子) #3
 				└─ 地图(开发中)
 			`)
 		} else if cmd == "0" {
 			break
 		} else if cmd == "1" {
-			fmt.Println("*** 旅行者信息如下 ***")
-			fmt.Println("昵称", p.ModPlayer.Name)
-			fmt.Println("签名", p.ModPlayer.Sign)
-			fmt.Println("等级", p.ModPlayer.PlayerLevel)
-			fmt.Println("经验", p.ModPlayer.PlayerExp)
-			p.ModPlayer.GetBirthDay()
-			fmt.Println("世界等级", p.ModPlayer.WorldLevelNow)
-			p.ModPlayer.GetAvatar()
-			p.ModPlayer.GetCard()
+			showInfos(p)
 			fmt.Println("****** 分隔线 ******")
-			itemId := 0
-			for outloop {
-				fmt.Println("//show// -1:展示路径 0:返回上一级 1:设置昵称 2:设置签名 3:头像 4:名片 5:生日")
-				_, _ = fmt.Scan(&cmd)
-				switch cmd {
-				case "-1":
-					fmt.Println(`
+			personalInfo(p)
+		} else if cmd == "2" {
+			bag(p, cmd)
+		} else if cmd == "3" {
+			times := 0
+			fmt.Println("输入要抽卡的次数")
+			_, _ = fmt.Scan(&times)
+			p.HandleDraw(0, times)
+		}
+	}
+	Wait.Done()
+}
+
+func showInfos(p *Player) {
+	fmt.Println("*** 旅行者信息如下 ***")
+	fmt.Println("昵称", p.ModPlayer.Name)
+	fmt.Println("签名", p.ModPlayer.Sign)
+	fmt.Println("等级", p.ModPlayer.PlayerLevel)
+	fmt.Println("经验", p.ModPlayer.PlayerExp)
+	p.ModPlayer.GetBirthDay()
+	fmt.Println("世界等级", p.ModPlayer.WorldLevelNow)
+	p.ModPlayer.GetAvatar()
+	p.ModPlayer.GetCard()
+}
+
+func personalInfo(p *Player) {
+	outloop := true
+	cmd := ""
+	for outloop {
+		fmt.Println("//show// -1:展示路径 0:返回上一级 1:设置昵称 2:设置签名 3:头像 4:名片 5:生日")
+		_, _ = fmt.Scan(&cmd)
+		switch cmd {
+		case "-1":
+			fmt.Println(`
 主界面#-1─┬─ 个人信息(当前位置)
 		 │    ├─设置昵称 #1
 		 │	  ├─设置签名 #2
@@ -131,24 +155,36 @@ func (p *Player) Run() {
 		 ├─ 背包
 		 └─ 地图(开发中)
 					`)
-				case "0":
-					outloop = false
-				case "1":
-					fmt.Println("输入新名字")
-					_, _ = fmt.Scan(&cmd)
-					p.ReceiveSetName(cmd)
-				case "2":
-					fmt.Println("输入新签名")
-					_, _ = fmt.Scan(&cmd)
-					p.ReceiveSetSign(cmd)
-				case "3":
-					loop := true
-					for loop {
-						fmt.Println("//头像// -1:展示路径 0:返回上一级 1:查询拥有的头像 2:设置头像")
-						_, _ = fmt.Scan(&cmd)
-						switch cmd {
-						case "-1":
-							fmt.Println(`
+		case "0":
+			outloop = false
+		case "1":
+			fmt.Println("输入新名字")
+			_, _ = fmt.Scan(&cmd)
+			p.ReceiveSetName(cmd)
+		case "2":
+			fmt.Println("输入新签名")
+			_, _ = fmt.Scan(&cmd)
+			p.ReceiveSetSign(cmd)
+		case "3":
+			avatarInfo(p)
+		case "4":
+			cardInfo(p)
+		case "5":
+			birthDay(p)
+		}
+	}
+}
+
+func avatarInfo(p *Player) {
+	loop := true
+	cmd := ""
+	itemId := 0
+	for loop {
+		fmt.Println("//头像// -1:展示路径 0:返回上一级 1:查询拥有的头像 2:设置头像")
+		_, _ = fmt.Scan(&cmd)
+		switch cmd {
+		case "-1":
+			fmt.Println(`
 主界面#-1─┬─ 个人信息
 		 │    ├─设置昵称
 		 │	  ├─设置签名
@@ -160,26 +196,30 @@ func (p *Player) Run() {
 		 ├─ 背包
 		 └─ 地图(开发中)
 					`)
-						case "0":
-							loop = false
-						case "1":
-							for i, avatar := range p.ModAvatar.AvatarInfo {
-								fmt.Println(i, avatar.AvatarName)
-							}
-						case "2":
-							fmt.Println("输入新头像id")
-							_, _ = fmt.Scan(&itemId)
-							p.ReceiveSetAvatar(itemId)
-						}
-					}
-				case "4":
-					loop := true
-					for loop {
-						fmt.Println("//名片// -1:展示路径 0:返回上一级 1:查询拥有的名片 2:设置名片")
-						_, _ = fmt.Scan(&cmd)
-						switch cmd {
-						case "-1":
-							fmt.Println(`
+		case "0":
+			loop = false
+		case "1":
+			for i, avatar := range p.ModAvatar.AvatarInfo {
+				fmt.Println(i, avatar.AvatarName)
+			}
+		case "2":
+			fmt.Println("输入新头像id")
+			_, _ = fmt.Scan(&itemId)
+			p.ReceiveSetAvatar(itemId)
+		}
+	}
+}
+
+func cardInfo(p *Player) {
+	loop := true
+	cmd := ""
+	itemId := 0
+	for loop {
+		fmt.Println("//名片// -1:展示路径 0:返回上一级 1:查询拥有的名片 2:设置名片")
+		_, _ = fmt.Scan(&cmd)
+		switch cmd {
+		case "-1":
+			fmt.Println(`
 主界面#-1─┬─ 个人信息
 		 │    ├─设置昵称
 		 │	  ├─设置签名
@@ -191,26 +231,30 @@ func (p *Player) Run() {
 		 ├─ 背包
 		 └─ 地图(开发中)
 					`)
-						case "0":
-							loop = false
-						case "1":
-							for i, card := range p.ModCard.CardInfo {
-								fmt.Println(i, card.CardName)
-							}
-						case "2":
-							fmt.Println("输入新名片id")
-							_, _ = fmt.Scan(&itemId)
-							p.ReceiveSetCard(itemId)
-						}
-					}
-				case "5":
-					loop := true
-					for loop {
-						fmt.Println("//头像// -1:展示路径 0:返回上一级 1:查询生日 2:设置生日")
-						_, _ = fmt.Scan(&cmd)
-						switch cmd {
-						case "-1":
-							fmt.Println(`
+		case "0":
+			loop = false
+		case "1":
+			for i, card := range p.ModCard.CardInfo {
+				fmt.Println(i, card.CardName)
+			}
+		case "2":
+			fmt.Println("输入新名片id")
+			_, _ = fmt.Scan(&itemId)
+			p.ReceiveSetCard(itemId)
+		}
+	}
+}
+
+func birthDay(p *Player) {
+	loop := true
+	cmd := ""
+	itemId := 0
+	for loop {
+		fmt.Println("//生日// -1:展示路径 0:返回上一级 1:查询生日 2:设置生日")
+		_, _ = fmt.Scan(&cmd)
+		switch cmd {
+		case "-1":
+			fmt.Println(`
 主界面#-1─┬─ 个人信息
 		 │    ├─设置昵称
 		 │	  ├─设置签名
@@ -222,27 +266,28 @@ func (p *Player) Run() {
 		 ├─ 背包
 		 └─ 地图(开发中)
 					`)
-						case "0":
-							loop = false
-						case "1":
-							p.ModPlayer.GetBirthDay()
-						case "2":
-							fmt.Println("输入生日（月数*100+天数，示例：6月28对应628）")
-							_, _ = fmt.Scan(&itemId)
-							p.SetBirthDay(itemId)
-						}
-					}
-				}
-			}
-		} else if cmd == "2" {
-			itemId := 0
-			itemAccount := 0
-			for outloop {
-				fmt.Println("//背包// -1:展示路径 0:返回上一级 1:添加物品 2:移除物品 3:使用物品")
-				_, _ = fmt.Scan(&cmd)
-				switch cmd {
-				case "-1":
-					fmt.Println(`
+		case "0":
+			loop = false
+		case "1":
+			p.ModPlayer.GetBirthDay()
+		case "2":
+			fmt.Println("输入生日（月数*100+天数，示例：6月28对应628）")
+			_, _ = fmt.Scan(&itemId)
+			p.SetBirthDay(itemId)
+		}
+	}
+}
+
+func bag(p *Player, cmd string) {
+	itemId := 0
+	itemAccount := 0
+	outloop := true
+	for outloop {
+		fmt.Println("//背包// -1:展示路径 0:返回上一级 1:添加物品 2:移除物品 3:使用物品")
+		_, _ = fmt.Scan(&cmd)
+		switch cmd {
+		case "-1":
+			fmt.Println(`
 主界面#0─┬─ 个人信息
         ├─ 背包(当前位置)
  		│	  ├─添加物品 #1
@@ -250,31 +295,28 @@ func (p *Player) Run() {
 		│	  └─使用物品 #3
 		└─ 地图(开发中)
 					`)
-				case "0":
-					outloop = false
-				case "1":
-					fmt.Println("输入添加的物品id")
-					_, _ = fmt.Scan(&itemId)
-					fmt.Println("输入添加的物品数量")
-					_, _ = fmt.Scan(&itemAccount)
-					p.ModBag.AddItem(p, itemId, int64(itemAccount))
-				case "2":
-					fmt.Println("输入移除的物品id")
-					_, _ = fmt.Scan(&itemId)
-					fmt.Println("输入移除的物品数量")
-					_, _ = fmt.Scan(&itemAccount)
-					p.ModBag.RemoveItem(p, itemId, int64(itemAccount))
-				case "3":
-					fmt.Println("输入使用的物品id")
-					_, _ = fmt.Scan(&itemId)
-					fmt.Println("输入使用的物品数量")
-					_, _ = fmt.Scan(&itemAccount)
-					p.HandleUseItem(itemId, int64(itemAccount))
-				}
-			}
+		case "0":
+			outloop = false
+		case "1":
+			fmt.Println("输入添加的物品id")
+			_, _ = fmt.Scan(&itemId)
+			fmt.Println("输入添加的物品数量")
+			_, _ = fmt.Scan(&itemAccount)
+			p.ModBag.AddItem(p, itemId, int64(itemAccount))
+		case "2":
+			fmt.Println("输入移除的物品id")
+			_, _ = fmt.Scan(&itemId)
+			fmt.Println("输入移除的物品数量")
+			_, _ = fmt.Scan(&itemAccount)
+			p.ModBag.RemoveItem(p, itemId, int64(itemAccount))
+		case "3":
+			fmt.Println("输入使用的物品id")
+			_, _ = fmt.Scan(&itemId)
+			fmt.Println("输入使用的物品数量")
+			_, _ = fmt.Scan(&itemAccount)
+			p.HandleUseItem(itemId, int64(itemAccount))
 		}
 	}
-	Wait.Done()
 }
 
 // --- 由用户主动发起的方法 ---
@@ -332,4 +374,9 @@ func (p *Player) SetHideShowTeam(hide int) {
 // HandleUseItem 使用物品
 func (p *Player) HandleUseItem(itemId int, account int64) {
 	p.ModBag.UseItem(p, itemId, account)
+}
+
+// HandleDraw 限定池抽卡
+func (p *Player) HandleDraw(pool int, times int) {
+	p.ModPool.UpPoolDraw(times)
 }
