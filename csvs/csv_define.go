@@ -17,6 +17,8 @@ const (
 	WEAPON_BAG_MAX_ACCOUNT = 2000 // 武器背包最大容量
 	RELICS_BAG_MAX_ACCOUNT = 1500 // 圣遗物背包最大容量
 
-	FIVE_STAR_TIMES_LIMIT                  = 73  // 抽卡次数修正
-	FIVE_STAR_TIMES_LIMIT_TRIGGER_INCREASE = 600 // 超过修正临界值后如果还没有抽到5星，则每次增加概率600/10000
+	FIVE_STAR_TIMES_LIMIT                  = 72   // 抽卡次数修正
+	FIVE_STAR_TIMES_LIMIT_TRIGGER_INCREASE = 600  // 超过修正临界值后如果还没有抽到5星，则每次增加概率600/10000
+	FOUR_STAR_TIMES_LIMIT                  = 8    // 抽卡次数修正
+	FOUR_STAR_TIMES_LIMIT_TRIGGER_INCREASE = 5100 // 超过修正临界值后如果还没有抽到4星，则每次增加概率5100/10000
 )
