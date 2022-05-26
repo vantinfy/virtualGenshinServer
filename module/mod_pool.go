@@ -21,6 +21,10 @@ func (p *ModPool) UpPoolDraw(times int) {
 	cnt5 := 0 // 5星统计
 	cnt4 := 0 // 4星统计
 	for i := 0; i < times; i++ {
+		// 抽卡前先自增 现实的抽卡次数是1...10+，而不是0...9+
+		p.UpPoolInfo.FiveDrawTimes++
+		p.UpPoolInfo.FourDrawTimes++
+
 		dropGroup := csvs.ConfigDropMap[1000]
 		if dropGroup == nil {
 			return
@@ -66,13 +70,13 @@ func (p *ModPool) UpPoolDraw(times int) {
 			if role != nil { // 出了角色
 				if role.Star == 5 { // 出货5星角色后重置次数
 					p.UpPoolInfo.FiveDrawTimes = 0
-					p.UpPoolInfo.FourDrawTimes++
+					//p.UpPoolInfo.FourDrawTimes--
 					cnt5++
 					// up池处理大小保底问题
 					card = p.handle5star(card)
 				} else if role.Star == 4 { // 出货4星角色后重置次数
 					p.UpPoolInfo.FourDrawTimes = 0
-					p.UpPoolInfo.FiveDrawTimes++
+					//p.UpPoolInfo.FiveDrawTimes
 					cnt4++
 				}
 			} else { // 出了武器[因为角色只有4、5星，role==nil则掉落一定为武器（3、4、5星）]
@@ -82,16 +86,13 @@ func (p *ModPool) UpPoolDraw(times int) {
 					return
 				} else if weapon.Star == 5 { // 五星武器情况 限定池是不会走到这里来的，保底五星是角色（应该）
 					p.UpPoolInfo.FiveDrawTimes = 0
-					p.UpPoolInfo.FourDrawTimes++
+					//p.UpPoolInfo.FourDrawTimes--
 					cnt5++
 				} else if weapon.Star == 4 { // 四星武器
 					p.UpPoolInfo.FourDrawTimes = 0
-					p.UpPoolInfo.FiveDrawTimes++
+					//p.UpPoolInfo.FiveDrawTimes--
 					cnt4++
-				} else { // 三星武器
-					p.UpPoolInfo.FiveDrawTimes++
-					p.UpPoolInfo.FourDrawTimes++
-				}
+				} // else { // 三星武器 }
 			}
 			cards[card.Result]++
 		}
