@@ -62,6 +62,7 @@ func NewPlayer() *Player {
 
 	player.ModPool = new(ModPool)
 	player.ModPool.UpPoolInfo = &PoolInfo{}
+	player.ModPool.UpPoolInfo.Statistics = &Statistic{}
 
 	// --- 数据初始化 ---
 	player.ModPlayer.Name = "旅行者"
@@ -378,5 +379,5 @@ func (p *Player) HandleUseItem(itemId int, account int64) {
 
 // HandleDraw 限定池抽卡
 func (p *Player) HandleDraw(pool int, times int) {
-	p.ModPool.UpPoolDraw(times)
+	p.ModPool.UpPoolDraw(times, WithNGold(), WithWhichGold(), WithDropCnt(), WithHistoryCnt())
 }
