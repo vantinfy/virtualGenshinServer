@@ -99,13 +99,14 @@ func (p *Player) Run() {
 		}
 	}
 	for {
-		fmt.Println("///main/// -1:展示路径 0:退出 1:查看玩家信息 2:进入背包 3:抽up池")
+		fmt.Println("///main/// -1:展示路径 0:退出 1:查看玩家信息 2:进入背包 3:抽up池 4:查看角色")
 		_, _ = fmt.Scan(&cmd)
 		if cmd == "-1" {
 			fmt.Println(`
 主界面(当前位置) ─┬─ 个人信息 #1
 				├─ 背包 #2
 				├─ 抽卡(up池子) #3
+				├─ 查看角色 #4
 				└─ 地图(开发中)
 			`)
 		} else if cmd == "0" {
@@ -120,7 +121,9 @@ func (p *Player) Run() {
 			times := 0
 			fmt.Println("输入要抽卡的次数")
 			_, _ = fmt.Scan(&times)
-			p.HandleDraw(0, times)
+			p.HandleDraw(p, 0, times)
+		} else if cmd == "4" {
+			p.HandleShowRoles()
 		}
 	}
 	Wait.Done()
@@ -380,4 +383,8 @@ func (p *Player) HandleUseItem(itemId int, account int64) {
 // HandleDraw 限定池抽卡
 func (p *Player) HandleDraw(pool int, times int) {
 	p.ModPool.UpPoolDraw(times, WithNGold(), WithWhichGold(), WithDropCnt(), WithHistoryCnt())
+}
+
+func (p *Player) HandleShowRoles() {
+	p.ModRole.ShowRoles()
 }

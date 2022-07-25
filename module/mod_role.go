@@ -75,3 +75,15 @@ func (r *ModRole) AddItem(player *Player, roleId int, account int64) {
 	}
 	fmt.Printf("第%v次，共获得了%v个角色%v\n", r.RoleInfo[roleId].GetTimes, account, r.RoleInfo[roleId].RoleName)
 }
+
+// ShowRoles 查看拥有哪些角色
+func (r *ModRole) ShowRoles() {
+	fmt.Println("角色如下")
+	for _, info := range r.RoleInfo {
+		info.ShowInfos()
+	}
+}
+
+func (r *RoleInfo) ShowInfos() {
+	fmt.Printf("%s累计获得次数: %d\n", csvs.GetItemName(r.RoleId), r.GetTimes)
+}
