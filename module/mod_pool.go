@@ -98,7 +98,7 @@ func (p *ModPool) PrintStatistic(switches map[string]int) {
 	}
 }
 
-func (p *ModPool) UpPoolDraw(times int, opts ...Options) {
+func (p *ModPool) UpPoolDraw(player *Player, times int, opts ...Options) {
 	cards := map[int]int{}
 	switches := p.InitStatistic(opts...) // 开关 记录统计哪些信息
 	for i := 0; i < times; i++ {
@@ -178,9 +178,11 @@ func (p *ModPool) UpPoolDraw(times int, opts ...Options) {
 			// 每累计十抽过后记录该十抽内的金色总量
 			if p.UpPoolInfo.Statistics.HistoryCnt%10 == 0 {
 				p.UpPoolInfo.Statistics.NGold[p.UpPoolInfo.Statistics.GoldEveryTen]++
-				p.UpPoolInfo.Statistics.GoldEveryTen = 0 // 充值N金
+				p.UpPoolInfo.Statistics.GoldEveryTen = 0 // 抽中N金
 			}
 			cards[card.Result]++
+			// 抽到的东西放入背包
+			player.ModBag.AddItem(player, card.Result, 1)
 		}
 	}
 

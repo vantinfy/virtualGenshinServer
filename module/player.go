@@ -381,8 +381,8 @@ func (p *Player) HandleUseItem(itemId int, account int64) {
 }
 
 // HandleDraw 限定池抽卡
-func (p *Player) HandleDraw(pool int, times int) {
-	p.ModPool.UpPoolDraw(times, WithNGold(), WithWhichGold(), WithDropCnt(), WithHistoryCnt())
+func (p *Player) HandleDraw(player *Player, pool int, times int) {
+	p.ModPool.UpPoolDraw(player, times, WithNGold(), WithWhichGold(), WithDropCnt(), WithHistoryCnt())
 }
 
 func (p *Player) HandleShowRoles() {
