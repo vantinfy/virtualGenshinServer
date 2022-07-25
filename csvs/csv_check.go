@@ -141,6 +141,63 @@ func GetRandDropRecursionForCheck(dropGroup *DropGroup, fiveInfos, fourInfos map
 	return nil
 }
 
+// GetRandDropRecursionForCheckAvg 仓检版抽卡递归(平衡各角色概率
+func GetRandDropRecursionForCheckAvg(dropGroup *DropGroup, fiveInfos, fourInfos map[int]int) *ConfigDrop {
+	for _, v := range dropGroup.ConfigDrops {
+		if _, ok := fiveInfos[v.Result]; ok {
+			index := 0
+			minTimes := 0
+			for i, drops := range dropGroup.ConfigDrops {
+				if _, ok := fiveInfos[drops.Result]; !ok {
+					index = i
+					break
+				}
+				if minTimes == 0 || minTimes > fiveInfos[drops.Result] {
+					minTimes = fiveInfos[drops.Result]
+					index = i
+				}
+			}
+			return dropGroup.ConfigDrops[index]
+		}
+	}
+
+	for _, v := range dropGroup.ConfigDrops {
+		if _, ok := fourInfos[v.Result]; ok {
+			index := 0
+			minTimes := 0
+			for i, drops := range dropGroup.ConfigDrops {
+				if _, ok := fourInfos[drops.Result]; !ok {
+					index = i
+					break
+				}
+				if minTimes == 0 || minTimes > fourInfos[drops.Result] {
+					minTimes = fourInfos[drops.Result]
+					index = i
+				}
+			}
+			return dropGroup.ConfigDrops[index]
+		}
+	}
+
+	randNum := rand.Intn(dropGroup.WeightAll)
+	randNow := 0
+	for _, drop := range dropGroup.ConfigDrops {
+		randNow += drop.Weight
+		if randNum < randNow {
+			if drop.IsEnd == LOGIC_TRUE {
+				// 递归出口，当获取的掉落配置isEnd=1，表示已经摇到了具体某一个item（角色/武器）而不是另一个掉落配置
+				return drop
+			}
+			dropGroup = ConfigDropMap[drop.Result]
+			if dropGroup == nil {
+				return nil
+			}
+			return GetRandDropRecursionForCheckAvg(dropGroup, fiveInfos, fourInfos)
+		}
+	}
+	return nil
+}
+
 func RandDropTest() {
 	dropGroup := ConfigDropMap[1000]
 	if dropGroup == nil {

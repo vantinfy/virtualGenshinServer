@@ -99,7 +99,7 @@ func (p *Player) Run() {
 		}
 	}
 	for {
-		fmt.Println("///main/// -1:展示路径 0:退出 1:查看玩家信息 2:进入背包 3:抽up池 4:查看角色 5:仓检抽卡(天选幸运儿)")
+		fmt.Println("///main/// -1:展示路径 0:退出 1:查看玩家信息 2:进入背包 3:抽up池 4:查看角色 5:仓检抽卡(天选幸运儿) 6:平衡仓检抽卡")
 		_, _ = fmt.Scan(&cmd)
 		if cmd == "-1" {
 			fmt.Println(`
@@ -108,6 +108,7 @@ func (p *Player) Run() {
 				├─ 抽卡(up池子) #3
 				├─ 查看角色 #4
 				├─ 仓检抽卡 #5
+				├─ 平衡仓检抽卡 #6
 				└─ 地图(开发中)
 			`)
 		} else if cmd == "0" {
@@ -130,6 +131,11 @@ func (p *Player) Run() {
 			fmt.Println("输入(仓检)抽卡次数")
 			_, _ = fmt.Scan(&times)
 			p.HandleDrawWithCheck(p, 0, times)
+		} else if cmd == "6" {
+			times := 0
+			fmt.Println("输入(平衡仓检)抽卡次数")
+			_, _ = fmt.Scan(&times)
+			p.HandleDrawWithCheckAvg(p, 0, times)
 		}
 	}
 	Wait.Done()
@@ -398,4 +404,8 @@ func (p *Player) HandleShowRoles() {
 // HandleDrawWithCheck 限定池抽卡(仓检版)
 func (p *Player) HandleDrawWithCheck(player *Player, pool int, times int) {
 	p.ModPool.UpPoolDrawWithCheck(player, times, WithNGold(), WithWhichGold(), WithDropCnt(), WithHistoryCnt())
+}
+
+func (p *Player) HandleDrawWithCheckAvg(player *Player, pool int, times int) {
+	p.ModPool.UpPoolDrawWithCheckAvg(player, times, WithNGold(), WithWhichGold(), WithDropCnt(), WithHistoryCnt())
 }
