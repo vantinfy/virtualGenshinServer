@@ -87,3 +87,19 @@ func (r *ModRole) ShowRoles() {
 func (r *RoleInfo) ShowInfos() {
 	fmt.Printf("%s累计获得次数: %d\n", csvs.GetItemName(r.RoleId), r.GetTimes)
 }
+
+// GetRolesInfoForCheck 获取已有的4 5星角色(供仓检)
+func (r *ModRole) GetRolesInfoForCheck() (map[int]int, map[int]int) {
+	fiveInfos := map[int]int{}
+	fourInfos := map[int]int{}
+
+	for _, info := range r.RoleInfo {
+		if info.Star == 5 {
+			fiveInfos[info.RoleId] = info.GetTimes
+		} else if info.Star == 4 {
+			fourInfos[info.RoleId] = info.GetTimes
+		}
+	}
+
+	return fiveInfos, fourInfos
+}

@@ -82,6 +82,65 @@ func GetRandDropRecursion(dropGroup *DropGroup) *ConfigDrop {
 	return nil
 }
 
+// GetRandDropRecursionForCheck 仓检版抽卡递归
+func GetRandDropRecursionForCheck(dropGroup *DropGroup, fiveInfos, fourInfos map[int]int) *ConfigDrop {
+	// 幸运5星(bushi
+	for _, v := range dropGroup.ConfigDrops {
+		_, ok := fiveInfos[v.Result]
+		if ok {
+			index := 0
+			maxTimes := 0
+			for i, drops := range dropGroup.ConfigDrops {
+				_, ok := fiveInfos[drops.Result]
+				if !ok {
+					continue
+				}
+				if maxTimes < fiveInfos[drops.Result] {
+					maxTimes = fiveInfos[drops.Result]
+					index = i
+				}
+			}
+			return dropGroup.ConfigDrops[index]
+		}
+	}
+
+	// 幸运4星(bushi
+	for _, v := range dropGroup.ConfigDrops {
+		if _, ok := fourInfos[v.Result]; ok {
+			index := 0
+			maxTimes := 0
+			for i, drops := range dropGroup.ConfigDrops {
+				if _, ok := fourInfos[drops.Result]; !ok {
+					continue
+				}
+				if maxTimes < fourInfos[drops.Result] {
+					maxTimes = fourInfos[drops.Result]
+					index = i
+				}
+			}
+			return dropGroup.ConfigDrops[index]
+		}
+	}
+
+	randNum := rand.Intn(dropGroup.WeightAll)
+	randNow := 0
+	for _, drop := range dropGroup.ConfigDrops {
+		randNow += drop.Weight
+		if randNum < randNow {
+			if drop.IsEnd == LOGIC_TRUE {
+				// 递归出口，当获取的掉落配置isEnd=1，表示已经摇到了具体某一个item（角色/武器）而不是另一个掉落配置
+				return drop
+			}
+			dropGroup = ConfigDropMap[drop.Result]
+			if dropGroup == nil {
+				return nil
+			}
+			return GetRandDropRecursionForCheck(dropGroup, fiveInfos, fourInfos)
+		}
+	}
+	return nil
+}
+
 func RandDropTest() {
 	dropGroup := ConfigDropMap[1000]
 	if dropGroup == nil {
