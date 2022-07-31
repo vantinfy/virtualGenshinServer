@@ -20,6 +20,7 @@ type Player struct {
 	ModRole       *ModRole       // 角色
 	ModBag        *ModBag        // 背包
 	ModWeapon     *ModWeapon     // 武器
+	ModMap        *ModMap        // 地图
 	ModRelics     *ModRelics     // 圣遗物
 	ModCook       *ModCook       // 烹饪技能
 	ModHome       *ModHome       // 家园物品
@@ -50,6 +51,9 @@ func NewPlayer() *Player {
 
 	player.ModWeapon = new(ModWeapon)
 	player.ModWeapon.WeaponInfo = make(map[int]*Weapon)
+
+	player.ModMap = new(ModMap)
+	player.ModMap.InitData()
 
 	player.ModRelics = new(ModRelics)
 	player.ModRelics.RelicsInfo = make(map[int64]*Relics) // 获得圣遗物的次数要比武器多得多，因此键用int64
