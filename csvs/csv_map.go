@@ -11,9 +11,12 @@ type ConfigMap struct {
 }
 
 type ConfigMapEvent struct {
-	EventId   int `json:"EventId"`
-	EventType int `json:"EventType"`
-	EventItem int `json:"EventItem"`
+	EventId     int    `json:"EventId"`
+	EventType   int    `json:"EventType"`
+	RefreshType int    `json:"RefreshType"`
+	Name        string `json:"Name"`
+	EventDrop   int    `json:"EventDrop"`
+	MapId       int    `json:"MapId"`
 }
 
 var (
@@ -33,4 +36,20 @@ func init() {
 	if err != nil {
 		fmt.Println("初始化蒙德地图错误", err)
 	}
+}
+
+func GetMapName(mapId int) string {
+	_, ok := ConfigMapMap[mapId]
+	if !ok {
+		return ""
+	}
+	return ConfigMapMap[mapId].MapName
+}
+
+func GetEventName(eventId int) string {
+	_, ok := ConfigMapMondstadt[eventId]
+	if !ok {
+		return ""
+	}
+	return ConfigMapMondstadt[eventId].Name
 }
