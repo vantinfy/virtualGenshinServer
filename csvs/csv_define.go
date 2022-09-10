@@ -1,6 +1,12 @@
 package csvs
 
 const (
+	EVENT_START  = 0
+	EVENT_FINISH = 9
+	EVENT_END    = 10
+)
+
+const (
 	LOGIC_FALSE = 0 // 逻辑0，目前用于是否隐藏展示阵容详情
 	LOGIC_TRUE  = 1 // 逻辑1
 

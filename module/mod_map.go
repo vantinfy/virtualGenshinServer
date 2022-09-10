@@ -2,6 +2,7 @@ package module
 
 import (
 	"VirtualGenshinServer/csvs"
+	"fmt"
 )
 
 type Map struct {
@@ -42,7 +43,7 @@ func (m *ModMap) InitData() {
 		if !ok {
 			m.MapInfo[v.MapId].EventInfo[v.EventId] = new(Event)
 			m.MapInfo[v.MapId].EventInfo[v.EventId].EventId = v.EventId
-			m.MapInfo[v.MapId].EventInfo[v.EventId].State = csvs.LOGIC_FALSE
+			m.MapInfo[v.MapId].EventInfo[v.EventId].State = csvs.EVENT_START
 		}
 	}
 	//for _, m2 := range m.MapInfo {
@@ -58,4 +59,22 @@ func (m *ModMap) NewMapInfo(mapId int) *Map {
 		MapId:     mapId,
 		EventInfo: map[int]*Event{},
 	}
+}
+
+func (m *ModMap) SetEventState(mapId, eventId, state int) {
+	_, ok := m.MapInfo[mapId]
+	if !ok {
+		fmt.Println("地图不存在")
+		return
+	}
+	_, ok = m.MapInfo[mapId].EventInfo[eventId]
+	if !ok {
+		fmt.Println("事件不存在")
+		return
+	}
+	if m.MapInfo[mapId].EventInfo[eventId].State >= state {
+		fmt.Println("设置状态异常")
+		return
+	}
+	m.MapInfo[mapId].EventInfo[eventId].State = state
 }
