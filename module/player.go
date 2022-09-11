@@ -1,6 +1,7 @@
 package module
 
 import (
+	"VirtualGenshinServer/csvs"
 	"fmt"
 	"sync"
 )
@@ -103,7 +104,7 @@ func (p *Player) Run() {
 		}
 	}
 	for {
-		fmt.Println("///main/// -1:展示路径 0:退出 1:查看玩家信息 2:进入背包 3:抽up池 4:查看角色 5:仓检抽卡(天选幸运儿) 6:平衡仓检抽卡")
+		fmt.Println("///main/// -1:展示路径 0:退出 1:查看玩家信息 2:进入背包 3:抽up池 4:查看角色 5:仓检抽卡(天选幸运儿) 6:平衡仓检抽卡 7:地图")
 		_, _ = fmt.Scan(&cmd)
 		if cmd == "-1" {
 			fmt.Println(`
@@ -113,7 +114,7 @@ func (p *Player) Run() {
 				├─ 查看角色 #4
 				├─ 仓检抽卡 #5
 				├─ 平衡仓检抽卡 #6
-				└─ 地图(开发中)
+				└─ 地图 #7
 			`)
 		} else if cmd == "0" {
 			break
@@ -140,9 +141,34 @@ func (p *Player) Run() {
 			fmt.Println("输入(平衡仓检)抽卡次数")
 			_, _ = fmt.Scan(&times)
 			p.HandleDrawWithCheckAvg(p, 0, times)
+		} else if cmd == "7" {
+			mapId := 0
+			for {
+				fmt.Println("选择地图 0:返回 1:蒙德 2:璃月 1001:深入风龙废墟")
+				_, _ = fmt.Scan(&mapId)
+				if mapId == 0 {
+					break
+				}
+				p.ModMap.GetEventList(csvs.ConfigMapMap[mapId])
+				p.showMapEvents(mapId)
+			}
 		}
 	}
 	Wait.Done()
+}
+
+func (p *Player) showMapEvents(mapId int) {
+	var eventId int
+	for {
+		fmt.Println("///地图/// 输入要完成的事件(0返回)")
+		_, _ = fmt.Scan(&eventId)
+		if eventId == 0 {
+			break
+		}
+		p.ModMap.SetEventState(mapId, eventId, csvs.EVENT_END)
+		p.ModMap.GetEventList(csvs.ConfigMapMap[mapId])
+	}
+
 }
 
 func showInfos(p *Player) {
@@ -173,7 +199,7 @@ func personalInfo(p *Player) {
 		 │	  ├─名片 #4
 		 │	  └─生日 #5
 		 ├─ 背包
-		 └─ 地图(开发中)
+		 └─ 地图
 					`)
 		case "0":
 			outloop = false
@@ -214,7 +240,7 @@ func avatarInfo(p *Player) {
 		 │	  ├─名片 #4
 		 │	  └─生日 #5
 		 ├─ 背包
-		 └─ 地图(开发中)
+		 └─ 地图
 					`)
 		case "0":
 			loop = false
@@ -249,7 +275,7 @@ func cardInfo(p *Player) {
 		 │	  │	 └─设置名片 #2
 		 │	  └─生日 #5
 		 ├─ 背包
-		 └─ 地图(开发中)
+		 └─ 地图
 					`)
 		case "0":
 			loop = false
@@ -284,7 +310,7 @@ func birthDay(p *Player) {
 	 	 │	   	 ├─查看生日 #1
 		 │	   	 └─设置生日 #2
 		 ├─ 背包
-		 └─ 地图(开发中)
+		 └─ 地图
 					`)
 		case "0":
 			loop = false
@@ -313,7 +339,7 @@ func bag(p *Player, cmd string) {
  		│	  ├─添加物品 #1
  		│	  ├─移除物品 #2
 		│	  └─使用物品 #3
-		└─ 地图(开发中)
+		└─ 地图
 					`)
 		case "0":
 			outloop = false
@@ -359,6 +385,10 @@ func (p *Player) ReceiveSetName(name string) {
 // ReceiveSetSign 修改签名
 func (p *Player) ReceiveSetSign(sign string) {
 	p.ModPlayer.SetSign(p, sign)
+}
+
+func (p *Player) ReceiveSetEventState(mapId, eventId, state int) {
+	p.ModPlayer.SetEvent(p, mapId, eventId, state)
 }
 
 // ReduceWorldLevel 降低世界等级

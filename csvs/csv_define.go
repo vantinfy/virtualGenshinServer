@@ -7,6 +7,16 @@ const (
 )
 
 const (
+	MAP_REFRESH_DAY  = 1
+	MAP_REFRESH_WEEK = 2
+	MAP_REFRESH_SELF = 3
+
+	MAP_REFRESH_DAY_TIME  = 43200 // 刷新间隔 单位秒
+	MAP_REFRESH_WEEK_TIME = 604800
+	MAP_REFRESH_SELF_TIME = 180
+)
+
+const (
 	LOGIC_FALSE = 0 // 逻辑0，目前用于是否隐藏展示阵容详情
 	LOGIC_TRUE  = 1 // 逻辑1
 

@@ -93,6 +93,10 @@ func (p *ModPlayer) SetSign(player *Player, sign string) {
 	fmt.Println("设置新签名成功", p.Sign)
 }
 
+func (p *ModPlayer) SetEvent(player *Player, mapId, eventId, state int) {
+	player.ModMap.SetEventState(mapId, eventId, state)
+}
+
 // AddExp 获得经验
 func (p *ModPlayer) AddExp(player *Player, exp int) {
 	p.PlayerExp += exp
